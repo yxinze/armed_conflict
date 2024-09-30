@@ -29,12 +29,9 @@ finaldata <- covariates |>
 # need to fill in NAs with 0's for armconf1, drought, earthquake
 finaldata <- finaldata |>
   mutate(armed_conflict = replace_na(armed_conflict, 0),
+         totdeath = replace_na(totdeath, 0),
          Drought = replace_na(Drought, 0),
-         Earthquake = replace_na(Earthquake, 0),
-         MatMortality = replace_na(MatMortality, 0),
-         InfMortality = replace_na(InfMortality, 0),
-         NeoMortality = replace_na(NeoMortality, 0),
-         Und5Mortality = replace_na(Und5Mortality, 0))
+         Earthquake = replace_na(Earthquake, 0))
 
 # write csv file
 write.csv(finaldata, file = here("data", "analytical", "finaldata.csv"), 
