@@ -1,0 +1,81 @@
+---
+title: "ArmedConflictEDA"
+author: "Xinze Yu"
+format: pdf
+editor: visual
+---
+
+## Study Objectives and Operationalizations
+
+The **objective** of the current analysis is to study how armed conflicts impact the maternal and child health from a global scope. \
+
+Specifically, the primary **exposure variable** of interest is **armed conflict**, as defined by the UCDP, it is a a binary variable indicating the presence of conflict for each country–year observation (0 = no, $<25$ battle-related deaths; 1 = yes, $\le25$ battle-related deaths).\
+
+The primary **outcome** measures are maternal, under-5, infant, and neonatal **mortality rates**.\
+
+A list of covariates is included in the dataset, and will potentially be included in the model: "gdp1000", "OECD", "OECD2023", "popdens", "urban", "agedep", "male_edu", "temp", "rainfall1000", "Drought", "Earthquake".\
+
+
+## 1. Explore Data Structure and Summary Statistics of Key Variables
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# load required packages
+library(here)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(gridExtra)
+```
+
+We can start from checking the overall structure, data type, and missing values. 
+```{r}
+# import data
+acdata <- read.csv(here('data', 'analytical', 'finaldata.csv'), header = TRUE)
+
+# check structure, summary statistics, and missingness
+str(acdata)
+summary(acdata)
+```
+Note that one of the key outcome variables, maternal mortality, has noticeable missingness - 426 (11.5%) observations were missing out of 3720 observations. \
+
+## 2. Visualize the Distributions
+
+Plot **histograms** for outcome variables and covariates to identify skewness or outliers.
+```{r, warning=FALSE}
+# define outcome
+outcomes <- c("MatMortality", "Und5Mortality", "InfMortality", "NeoMortality")
+
+# create empty list to store plots
+plot_list <- list()
+
+# create histogram for each outcome
+for (var in outcomes) {
+  p <- ggplot(acdata, aes_string(x = var)) + 
+    geom_histogram(binwidth = 30, fill = "blue", color = "black") + 
+    labs(title = paste("Distribution of", var), x = var, y = "Count") + 
+    theme(plot.title = element_text(size = 10)) 
+  plot_list[[var]] <- p
+}
+
+# arrange plots into grid layout
+grid.arrange(grobs = plot_list, ncol = 2)
+```
+The largely empty graph in maternal mortality suggests the presence of outliers. We can proceed to use logarithms. 
+
+```{r, warning=FALSE}
+# create histogram for maternal mortality with log scale
+ggplot(acdata, aes_string(x = "MatMortality")) + 
+    geom_histogram(binwidth = 30, fill = "blue", color = "black") + 
+    scale_y_log10() + 
+    labs(title = paste("Distribution of", "MatMortality", "(with a log scale)"), 
+         x = "MatMortality", y = "Count")
+```
+
+
+To be finished...
+
+
+
+
+
+
