@@ -7,14 +7,13 @@ editor: visual
 
 ## Study Objectives and Operationalizations
 
-The **objective** of the current analysis is to study how armed conflicts impact the maternal and child health from a global scope. \
+The **objective** of the current analysis is to study how armed conflicts impact the maternal and child health from a global scope.\
 
-Specifically, the primary **exposure variable** of interest is **armed conflict**, as defined by the UCDP, it is a a binary variable indicating the presence of conflict for each country–year observation (0 = no, $<25$ battle-related deaths; 1 = yes, $\le25$ battle-related deaths).\
+Specifically, the primary **exposure variable** of interest is **armed conflict**, as defined by the UCDP, it is a a binary variable indicating the presence of conflict for each country--year observation (0 = no, $<25$ battle-related deaths; 1 = yes, $\le25$ battle-related deaths).\
 
 The primary **outcome** measures are maternal, under-5, infant, and neonatal **mortality rates**.\
 
 A list of covariates is included in the dataset, and will potentially be included in the model: "gdp1000", "OECD", "OECD2023", "popdens", "urban", "agedep", "male_edu", "temp", "rainfall1000", "Drought", "Earthquake".\
-
 
 ## 1. Explore Data Structure and Summary Statistics of Key Variables
 
@@ -25,22 +24,28 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(gridExtra)
+library(reshape2)
+library(RColorBrewer)
 ```
 
-We can start from checking the overall structure, data type, and missing values. 
+We can start from checking the overall structure, data type, and missing values.
+
 ```{r}
 # import data
 acdata <- read.csv(here('data', 'analytical', 'finaldata.csv'), header = TRUE)
+# factorize primary binary exposure
+acdata$armed_conflict <- as.factor(acdata$armed_conflict)
 
 # check structure, summary statistics, and missingness
 str(acdata)
 summary(acdata)
 ```
-Note that one of the key outcome variables, maternal mortality, has noticeable missingness - 426 (11.5%) observations were missing out of 3720 observations. \
+Note that one of the key outcome variables, maternal mortality, has noticeable missingness - 426 (11.5%) observations were missing out of 3720 observations.\
 
 ## 2. Visualize the Distributions
 
-Plot **histograms** for outcome variables and covariates to identify skewness or outliers.
+Plot **histograms** for outcome variables to identify skewness or outliers.
+
 ```{r, warning=FALSE}
 # define outcome
 outcomes <- c("MatMortality", "Und5Mortality", "InfMortality", "NeoMortality")
@@ -60,7 +65,8 @@ for (var in outcomes) {
 # arrange plots into grid layout
 grid.arrange(grobs = plot_list, ncol = 2)
 ```
-The largely empty graph in maternal mortality suggests the presence of outliers. We can proceed to use logarithms. 
+
+The largely empty graph in maternal mortality suggests the presence of outliers. We can proceed to use logarithms.
 
 ```{r, warning=FALSE}
 # create histogram for maternal mortality with log scale
@@ -71,11 +77,68 @@ ggplot(acdata, aes_string(x = "MatMortality")) +
          x = "MatMortality", y = "Count")
 ```
 
+```{r, warning=FALSE}
+# create empty list to store plots
+plot_list1 <- list()
 
-To be finished...
+# create boxplot to compare each outcome between 
+# conflict and non-conflict countries
+for (var in outcomes) {
+  p <- ggplot(acdata, aes_string(x = "armed_conflict", y = var)) + 
+    geom_boxplot() + 
+    labs(title = paste(var, "by Conflict Status"), 
+         x = "Armed Conflict (0=No, 1=Yes)", y = var)
+  plot_list1[[var]] <- p
+}
 
+# arrange plots into grid layout
+grid.arrange(grobs = plot_list1, ncol = 2)
+```
+Overall, the country/year with armed conflicts shows higher mortality rates among all outcome groups. 
 
+## 3. Explore Relationships between Variables
 
+```{r}
+# define covariates
+covariates <- c("gdp1000", "OECD", "OECD2023", "popdens", 
+                "urban", "agedep", "male_edu", "temp", 
+                "rainfall1000", "Drought", "Earthquake")
+
+# correlation between key variable
+cor.mat <- cor(acdata[, c(outcomes, covariates)], use = "complete.obs")
+
+# melt the correlation matrix to long format for ggplot
+melted.cor.mat <- melt(cor.mat)
+
+# Draw the heatmap using ggplot
+ggplot(data = melted.cor.mat, aes(x = Var1, y = Var2, fill = value)) + 
+  geom_tile(color = "white") + 
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1, 1), space = "Lab", 
+                       name = "Correlation") + 
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  coord_fixed() + 
+  labs(title = "Heatmap of Correlations Between Outcomes and Covariates", 
+       x = "", y = "")
+```
+
+## Summary of the EDA on Armed Conflict and Maternal & Child Health
+
+**1. Data Structure and Summary**\
+
+The dataset contains 3,720 observations across 21 variables, representing multiple countries over the period 2000–2019.
+Key variables include maternal mortality, infant mortality, and under-5 mortality, which show insignificant levels of missingness, with maternal mortality having highest rate of missingness (11.5%) that might be concerning.\
+
+**2. Distribution of Key Variables**\
+
+Histograms of the outcome variables reveal highly skewed distributions with potential outliers for maternal mortality. To manage this skewness, a log scale transformation was applied to the maternal mortality data, which provided a clearer view of the distribution.\
+
+Boxplots comparing conflict vs. non-conflict countries indicate higher mortality rates for maternal, under-5, infant, and neonatal mortality in conflict-affected countries. The presence of conflict appears to show a noticable association with worsened health outcomes for mothers and children.\
+
+**3. Correlations and Relationships**\
+
+A correlation heatmap was created to examine the relationships between the outcome variables and covariates. Key findings include: strong negative correlations between male_edu and all mortality measures; strong positive correlations between all mortality rates and agedep and temp. No significant correlations between natural disasters (e.g., drought, earthquakes) and the mortality outcomes.\
 
 
 
