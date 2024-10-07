@@ -1,0 +1,62 @@
+---
+title: "Armed Conflict Table 1"
+author: "Xinze Yu"
+format: pdf
+editor: visual
+---
+
+## Creating Table 1
+
+```{r, message=FALSE}
+# load required packages
+library(table1)
+library(here)
+library(dplyr)
+library(tidyr)
+```
+
+Tables stand alone, so we need to re-label the variables to make the table understandable.
+
+```{r}
+# import data
+ac.dat <- read.csv(here("data", "analytical", "finaldata.csv"), header = TRUE)
+
+# properly label variables
+ac.dat$armed_conflict <- ifelse(ac.dat$armed_conflict == 1, 
+                                "Armed Conflict = Yes", 
+                                "Armed Conflict = No")
+label(ac.dat$armed_conflict) <- "Armed Conflict"
+
+ac.dat$OECD <- ifelse(ac.dat$OECD == 1, "Yes", "No")
+label(ac.dat$OECD) <- "OECD member"
+
+ac.dat$Drought <- ifelse(ac.dat$Drought == 1, "Yes", "No")
+label(ac.dat$Drought) <- "Droughts"
+
+ac.dat$Earthquake <- ifelse(ac.dat$Earthquake == 1, "Yes", "No")
+label(ac.dat$Earthquake) <- "Earthquakes"
+
+label(ac.dat$gdp1000) <- "GDP (in thousands) per capita"
+label(ac.dat$popdens) <- "Population density"
+label(ac.dat$urban) <- "Urban residence"
+label(ac.dat$region) <- "Region"
+label(ac.dat$agedep) <- "Age dependency ratio"
+label(ac.dat$male_edu) <- "Male education"
+label(ac.dat$temp) <- "Temperature"
+label(ac.dat$rainfall1000) <- "Rainfall"
+```
+
+To create table 1, we focus on the baseline characteristics in year 2000.
+
+```{r, message=FALSE}
+# only consider the baseline year 2000
+ac.dat.bas <- ac.dat %>%
+  filter(Year == 2000)
+
+# create Table 1
+table1(~ gdp1000 + OECD + popdens + urban + region + agedep + 
+         male_edu + temp + Earthquake + Drought | armed_conflict, 
+       caption = "Table 1. Baseline Characteristics by Armed Conflict Status in the Year 2000", 
+       footnote = "Data are presented as means (SD) or counts (percentages) as appropriate.", 
+       data = ac.dat.bas)
+```

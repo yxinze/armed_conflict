@@ -1,0 +1,52 @@
+---
+title: "LineChart"
+author: "Xinze Yu"
+format: pdf
+editor: visual
+---
+
+# Create a line chart with ggplot
+```{r, message=FALSE}
+# load required packages
+library(ggplot2)
+library(here)
+library(dplyr)
+library(tidyr)
+```
+First, we need to find the countries with an increase in maternal mortality from 2000 to 2017.
+```{r}
+# import data
+ac.dat <- read.csv(here("data", "analytical", "finaldata.csv"), header = TRUE)
+
+# find countries with an increase in maternal mortality from 2000 to 2017
+increase.country <- ac.dat |> 
+  dplyr::select(country_name, ISO, Year, MatMortality) |>
+  dplyr::filter(Year < 2018) |>
+  arrange(ISO, Year) |>
+  group_by(ISO) |>
+  mutate(diffmatmor = MatMortality - MatMortality[1L]) |>
+  filter(Year == 2017 & diffmatmor > 0)
+
+# filter the data for selected 13 countries
+ac.dat.inc <- ac.dat |>
+  filter(country_name %in% increase.country$country_name)
+```
+Create the line chart using ggplot
+```{r, warning=FALSE}
+ac.dat.inc |> 
+  ggplot(aes(x = Year, y = MatMortality, color = country_name)) +
+  geom_line() + 
+  geom_point() +
+  labs(title = "Trend in Maternal Mortality for Countries with an Increase (2000-2017)",
+       x = "Year",
+       y = "Maternal Mortality",
+       color = "Country") +
+  theme_minimal() +
+  theme(legend.position = "bottom", 
+        legend.title = element_text(size = 8),
+        plot.title = element_text(hjust = 0, size = 10),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 8)) +
+  scale_x_continuous(breaks = seq(2000, 2017, by = 2))
+```
+
